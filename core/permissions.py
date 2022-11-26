@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
 
-SAFE_METHODS = ['POST']
+SAFE_METHODS = ['GET']
 
 class IsAdminUser(BasePermission):
     def has_permission(self, request, view):
