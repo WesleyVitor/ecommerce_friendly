@@ -3,10 +3,12 @@ from rest_framework.views import APIView
 
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import permission_classes
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework import status
 from django.core.exceptions import PermissionDenied
-from rest_framework.authentication import BasicAuthentication
+from core.models import Product
+from core.serializer import OutputProductSerializer
+from core.permissions import IsAdminUser
 class LoginAPIView(APIView):
 
     def post(self, request):
@@ -31,5 +33,13 @@ class LogoutAPIView(APIView):
         logout(request)
         return Response(status=status.HTTP_200_OK)
 
+class ProductApiView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAdminUser]
+    def get(self, request):
+        user=request.user.is_staff
+        products = Product.objects.all()
+        serializer = OutputProductSerializer(products, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-# Create your views here.
+
