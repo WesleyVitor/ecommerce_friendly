@@ -30,4 +30,4 @@ class LogoutTest(TestCase):
         url_logout = reverse('logout')
         
         response = self.cliente.get(url_logout)
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 403)

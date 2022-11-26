@@ -3,11 +3,11 @@ from rest_framework.views import APIView
 
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication, TokenAuthentication
 from rest_framework import status
 from django.core.exceptions import PermissionDenied
 from core.models import Product
-from core.serializer import OutputProductSerializer
+from core.serializer import OutputProductSerializer, InputProductSerializer
 from core.permissions import IsAdminUser
 class LoginAPIView(APIView):
 
@@ -37,9 +37,22 @@ class ProductApiView(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAdminUser]
     def get(self, request):
-        user=request.user.is_staff
+        
         products = Product.objects.all()
         serializer = OutputProductSerializer(products, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        serializer:InputProductSerializer = InputProductSerializer(data={
+            'name':request.data['name'],
+            'description':request.data['description'],
+            'price':request.data['price']
+        })
+        serializer.is_valid(raise_exception=True)
+        product = Product.objects.create(name=serializer['name'].value,
+        description=serializer['description'].value, 
+        price=float(serializer['price'].value))
+        product.save()
+        return Response(data=None, status=status.HTTP_201_CREATED)
 
 
