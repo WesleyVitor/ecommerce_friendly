@@ -2,12 +2,14 @@ from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
 
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication, TokenAuthentication
+from rest_framework.authentication import SessionAuthentication
 from rest_framework import status
-from django.core.exceptions import PermissionDenied
-from core.models import Product
-from core.serializer import OutputProductSerializer, InputProductSerializer
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+
+from core.models import Product, ItemProduct,ShoppingCart
+from core.serializer import OutputProductSerializer, InputProductSerializer, InputShoppingCartSerializer
 from core.permissions import IsAdminUser
 class LoginAPIView(APIView):
 
@@ -55,4 +57,38 @@ class ProductApiView(APIView):
         product.save()
         return Response(data=None, status=status.HTTP_201_CREATED)
 
+class ShoppingCartApiView(APIView):
+    authentication_classes = [SessionAuthentication]
+    def post(self, request:Request):
+        keys = request.data.keys()
+        if ('product' and 'amount') not in keys:
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
+        
+        data = {
+            'product':request.data['product'],
+            'amount':int(request.data['amount'])    
+        }
+        serializer = InputShoppingCartSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        
+        try:
+            p1 = Product.objects.get(pk=serializer['product'].value)
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        amount = serializer['amount'].value
+
+        item = ItemProduct.objects.create(product=p1, amount=amount)
+        user = request.user
+
+        try:
+            shoppingCart = user.shoppingcart
+        except ObjectDoesNotExist:
+            shoppingCart = ShoppingCart.objects.create(user=request.user) 
+        
+        
+        shoppingCart.list_items.add(item)
+        return Response(status=status.HTTP_201_CREATED)
+        
+        

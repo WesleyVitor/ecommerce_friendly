@@ -6,6 +6,9 @@ class InputProductSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=60)
     description = serializers.CharField(max_length=255)
     price = serializers.FloatField()
+class InputShoppingCartSerializer(serializers.Serializer):
+    product = serializers.CharField()
+    amount = serializers.IntegerField()
     
 
 
