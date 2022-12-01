@@ -8,8 +8,9 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework import status
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 
-from core.models import Product, ItemProduct,ShoppingCart
-from core.serializer import OutputProductSerializer, InputProductSerializer, InputShoppingCartSerializer
+from core.models import Product, ItemProduct,ShoppingCart, Buy
+from core.serializer import (
+    OutputProductSerializer, InputProductSerializer, InputShoppingCartSerializer,InputBuySerializer)
 from core.permissions import IsAdminUser
 class LoginAPIView(APIView):
 
@@ -91,4 +92,20 @@ class ShoppingCartApiView(APIView):
         shoppingCart.list_items.add(item)
         return Response(status=status.HTTP_201_CREATED)
         
-        
+class BuyApiView(APIView):
+    authentication_classes = [SessionAuthentication]
+
+
+    def post(self, request:Request):
+        user=  request.user
+        try:
+            shoppingCart:ShoppingCart = user.shoppingcart
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            b1 = Buy.objects.create(shoppingCart=shoppingCart, user=user)
+        except Exception:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(status=status.HTTP_201_CREATED)        

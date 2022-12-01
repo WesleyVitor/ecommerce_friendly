@@ -9,7 +9,10 @@ class InputProductSerializer(serializers.Serializer):
 class InputShoppingCartSerializer(serializers.Serializer):
     product = serializers.CharField()
     amount = serializers.IntegerField()
-    
+class InputBuySerializer(serializers.Serializer):
+    shoppingCart = serializers.CharField()
+
+
 
 
 class OutputProductSerializer(serializers.ModelSerializer):
