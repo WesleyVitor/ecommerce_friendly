@@ -1,7 +1,8 @@
 from django.test import TestCase, client
 from django.contrib.auth.models import User
+from rest_framework.response import Response
 from django.urls import reverse
-from core.models import ShoppingCart, Product, Buy
+from core.models import ShoppingCart, Product, Buy, ItemProduct
 EMAIL_USER="wesley@gmail.com"
 USERNAME_USER = "wesleyvitor"
 PASSWORD_USER = "123456aa"
@@ -65,4 +66,53 @@ class BuyTest(TestCase):
         response = cliente.post(url)
         self.assertEqual(response.status_code, 400)
     
-   
+    def test_see_buy_from_user_view(self):
+        cliente = client.Client()
+        cliente.login(username=USERNAME_USER, password=PASSWORD_USER)
+
+        
+
+        url = reverse("buy")
+        
+        response = cliente.get(url)
+        self.assertEqual(response.status_code,200)
+    def test_see_buy_from_user(self):
+        cliente = client.Client()
+        cliente.login(username=USERNAME_USER, password=PASSWORD_USER)
+
+        p1 = Product.objects.create(name='Arroz', description="Muito Bom", price=20)
+        p2 = Product.objects.create(name='Feijão', description="Muito Bom", price=20)
+        item = ItemProduct.objects.create(product=p1, amount=30)
+        item2 = ItemProduct.objects.create(product=p2, amount=30)
+        shoppingCart = ShoppingCart.objects.create(user=self.user)
+        shoppingCart.list_items.add(item)
+        shoppingCart.list_items.add(item2)
+        shoppingCart.save()
+
+        buy = Buy.objects.create(shoppingcart=shoppingCart, user=self.user)
+        url = reverse("buy")
+
+        data = {
+            'shoppingcart':[
+                {
+                    'id':shoppingCart.pk,
+                    'items':[
+                        {
+                            'product':item.product.name,
+                            'amount':item.amount
+                        },
+                        {
+                            'product':item2.product.name,
+                            'amount':item2.amount
+                        }
+                        
+                    ]
+                }
+            ]
+        }
+        
+        response:Response = cliente.get(url)
+        a=1
+        self.assertEqual(response.data, data)
+
+
