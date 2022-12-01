@@ -10,7 +10,7 @@ from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 
 from core.models import Product, ItemProduct,ShoppingCart, Buy
 from core.serializer import (
-    OutputProductSerializer, InputProductSerializer, InputShoppingCartSerializer,InputBuySerializer)
+    OutputProductSerializer, InputProductSerializer, InputShoppingCartSerializer)
 from core.permissions import IsAdminUser
 class LoginAPIView(APIView):
 
@@ -95,6 +95,30 @@ class ShoppingCartApiView(APIView):
 class BuyApiView(APIView):
     authentication_classes = [SessionAuthentication]
 
+    def get(self, request):
+        try:
+            buys = Buy.objects.filter(user=request.user)
+            
+            shoppingcarts = []
+            for buy in buys:
+                shoppingCart = buy.shoppingcart
+                items = []
+
+                for item in shoppingCart.list_items.all():
+                    obj_item = {
+                        'product':item.product.name, 'amount':item.amount}
+                    items.append(obj_item)
+                obj = {
+                    'id':shoppingCart.pk,
+                    'items':items
+                }
+                shoppingcarts.append(obj)
+            data = {
+                'shoppingcart':shoppingcarts
+            }
+            return Response(data=data, status=status.HTTP_200_OK)
+        except Exception:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def post(self, request:Request):
         user=  request.user
@@ -104,7 +128,7 @@ class BuyApiView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            b1 = Buy.objects.create(shoppingCart=shoppingCart, user=user)
+            b1 = Buy.objects.create(shoppingcart=shoppingCart, user=user)
         except Exception:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

@@ -20,8 +20,8 @@ class ShoppingCart(models.Model):
 
 
 class Buy(models.Model):
-    shoppingCart = models.OneToOneField(ShoppingCart, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    shoppingcart = models.OneToOneField(ShoppingCart, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True,related_name='buy')
 
 
 

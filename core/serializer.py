@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import Product
+from core.models import Product, Buy
 
 
 class InputProductSerializer(serializers.Serializer):
@@ -9,13 +9,10 @@ class InputProductSerializer(serializers.Serializer):
 class InputShoppingCartSerializer(serializers.Serializer):
     product = serializers.CharField()
     amount = serializers.IntegerField()
-class InputBuySerializer(serializers.Serializer):
-    shoppingCart = serializers.CharField()
-
-
 
 
 class OutputProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields=['id','name','description','price']
+
