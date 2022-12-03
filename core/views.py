@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication
 from rest_framework import status
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
-
+from rest_framework.authtoken.models import Token
 from core.models import Product, ItemProduct,ShoppingCart, Buy
 from core.serializer import (
     OutputProductSerializer, InputProductSerializer, InputShoppingCartSerializer)
@@ -21,18 +21,22 @@ class LoginAPIView(APIView):
         if username and password:
             user = authenticate(request=request, username=username, password=password)
             if not user:
+                print(username)
                 raise PermissionDenied
         else:
+            print(username)
             raise PermissionDenied
         
         login(request=request, user=user)
-        
-        return Response(data=None, status=status.HTTP_200_OK)
+        token, created = Token.objects.get_or_create(user=user)
+        return Response(data={'token':token.key}, status=status.HTTP_200_OK)
 
 class LogoutAPIView(APIView):
     permission_classes = [IsAuthenticated,]
     
     def get(self, request):
+        token = Token.objects.get(user=request.user)
+        token.delete()
         logout(request)
         return Response(status=status.HTTP_200_OK)
 
