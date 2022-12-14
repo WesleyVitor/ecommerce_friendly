@@ -6,6 +6,7 @@ from rest_framework.request import Request
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication
 from rest_framework import status
+
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from rest_framework.authtoken.models import Token
 from core.models import Product, ItemProduct,ShoppingCart, Buy
@@ -21,7 +22,7 @@ class LoginAPIView(APIView):
         if username and password:
             user = authenticate(request=request, username=username, password=password)
             if not user:
-                print(username)
+                print('username')
                 raise PermissionDenied
         else:
             print(username)
@@ -29,22 +30,22 @@ class LoginAPIView(APIView):
         
         login(request=request, user=user)
         token, created = Token.objects.get_or_create(user=user)
-        return Response(data={'token':token.key}, status=status.HTTP_200_OK)
+        return Response(data={'token':token.key},status=status.HTTP_200_OK)
 
 class LogoutAPIView(APIView):
     permission_classes = [IsAuthenticated,]
     
     def get(self, request):
         token = Token.objects.get(user=request.user)
-        token.delete()
+        
         logout(request)
         return Response(status=status.HTTP_200_OK)
 
 class ProductApiView(APIView):
-    authentication_classes = [SessionAuthentication]
+    authentication_classes = [SessionAuthentication, ]
     permission_classes = [IsAdminUser]
     def get(self, request):
-        
+        print("Nome do usuário:",request.user.username)
         products = Product.objects.all()
         serializer = OutputProductSerializer(products, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -64,6 +65,7 @@ class ProductApiView(APIView):
 
 class ShoppingCartApiView(APIView):
     authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
     def post(self, request:Request):
         keys = request.data.keys()
         if ('product' and 'amount') not in keys:
@@ -98,6 +100,7 @@ class ShoppingCartApiView(APIView):
         
 class BuyApiView(APIView):
     authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         try:
